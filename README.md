@@ -22,5 +22,7 @@ A direct exchange can be represented graphically as follows:
 
 
 
-<h5>Status of Queues After Run Producer App</h5>
+### Status of Queues After Run Producer App 
 ![](img/4.png)
+
+
