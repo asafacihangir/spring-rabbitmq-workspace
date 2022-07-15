@@ -1,4 +1,4 @@
-package com.phoenix.producer;
+package com.phoenix.producer.config;
 
 import com.github.javafaker.Faker;
 import org.springframework.context.annotation.Bean;

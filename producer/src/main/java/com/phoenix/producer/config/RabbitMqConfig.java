@@ -1,4 +1,4 @@
-package com.phoenix.producer;
+package com.phoenix.producer.config;
 
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Binding;
@@ -18,12 +18,12 @@ public class RabbitMqConfig {
 
   @Bean
   DirectExchange fileDataExchange() {
-    return new DirectExchange("file_data_exhange");
+    return new DirectExchange("invoice_data_exhange");
   }
 
   @Bean
   Queue fileDataQueue() {
-    return QueueBuilder.durable("file_data.queue")
+    return QueueBuilder.durable("invoice_data.queue")
         .withArgument("x-dead-letter-exchange", "dead_letter_exchange")
         .withArgument("x-dead-letter-routing-key", "dead_letter_routing_key")
         .build();
@@ -31,7 +31,7 @@ public class RabbitMqConfig {
 
   @Bean
   Binding fileDataBinding() {
-    return BindingBuilder.bind(fileDataQueue()).to(fileDataExchange()).with("file_data_routing_key");
+    return BindingBuilder.bind(fileDataQueue()).to(fileDataExchange()).with("invoice_data_routing_key");
   }
 
 
