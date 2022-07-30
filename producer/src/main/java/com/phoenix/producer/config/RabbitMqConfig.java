@@ -17,21 +17,21 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMqConfig {
 
   @Bean
-  DirectExchange fileDataExchange() {
-    return new DirectExchange("invoice_data_exhange");
+  DirectExchange smsDataExChange() {
+    return new DirectExchange("sms_data_exhange");
   }
 
   @Bean
-  Queue fileDataQueue() {
-    return QueueBuilder.durable("invoice_data.queue")
+  Queue smsDataQueue() {
+    return QueueBuilder.durable("sms_data.queue")
         .withArgument("x-dead-letter-exchange", "dead_letter_exchange")
         .withArgument("x-dead-letter-routing-key", "dead_letter_routing_key")
         .build();
   }
 
   @Bean
-  Binding fileDataBinding() {
-    return BindingBuilder.bind(fileDataQueue()).to(fileDataExchange()).with("invoice_data_routing_key");
+  Binding smsDataBinding() {
+    return BindingBuilder.bind(smsDataQueue()).to(smsDataExChange()).with("sms_data_routing_key");
   }
 
 

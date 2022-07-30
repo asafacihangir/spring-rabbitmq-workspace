@@ -6,10 +6,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableScheduling
 @SpringBootApplication
-public class InvoiceApplication {
+public class SmsSenderApplication {
 
   public static void main(String[] args) {
-    SpringApplication.run(InvoiceApplication.class, args);
+    SpringApplication.run(SmsSenderApplication.class, args);
   }
 
 }
