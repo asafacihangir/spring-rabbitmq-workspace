@@ -1,4 +1,4 @@
-package com.phoenix.consumer;
+package com.phoenix.consumer.config;
 
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;

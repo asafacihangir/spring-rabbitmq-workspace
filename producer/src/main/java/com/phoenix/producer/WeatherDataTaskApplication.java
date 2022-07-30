@@ -6,10 +6,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableScheduling
 @SpringBootApplication
-public class SmsSenderApplication {
+public class WeatherDataTaskApplication {
 
   public static void main(String[] args) {
-    SpringApplication.run(SmsSenderApplication.class, args);
+    SpringApplication.run(WeatherDataTaskApplication.class, args);
   }
 
 }

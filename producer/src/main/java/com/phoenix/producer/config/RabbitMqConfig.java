@@ -17,23 +17,24 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMqConfig {
 
   @Bean
-  DirectExchange smsDataExChange() {
-    return new DirectExchange("sms_data_exhange");
+  DirectExchange weatherDataExchange() {
+    return new DirectExchange("weather_data_work_exhange");
   }
 
   @Bean
-  Queue smsDataQueue() {
-    return QueueBuilder.durable("sms_data.queue")
+  Queue weatherDataWorkerDataQueue() {
+    return QueueBuilder.durable("weather_data_work.queue")
         .withArgument("x-dead-letter-exchange", "dead_letter_exchange")
         .withArgument("x-dead-letter-routing-key", "dead_letter_routing_key")
         .build();
   }
 
   @Bean
-  Binding smsDataBinding() {
-    return BindingBuilder.bind(smsDataQueue()).to(smsDataExChange()).with("sms_data_routing_key");
+  Binding weatherDataWorkerBinding() {
+    return BindingBuilder.bind(weatherDataWorkerDataQueue())
+        .to(weatherDataExchange())
+        .with("weather_data_work_routing_key");
   }
-
 
   @Bean
   DirectExchange deadLetterExchange() {
@@ -44,7 +45,6 @@ public class RabbitMqConfig {
   Queue dlq() {
     return QueueBuilder.durable("dead_letter.queue").build();
   }
-
 
   @Bean
   Binding DLQbinding() {
