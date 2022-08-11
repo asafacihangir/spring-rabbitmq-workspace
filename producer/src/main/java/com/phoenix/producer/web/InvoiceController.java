@@ -15,24 +15,10 @@ public class InvoiceController {
     this.invoiceService = invoiceService;
   }
 
-  @PostMapping("/send-cancelled-invoices")
-  public String sendCancelledInvoices() {
-
-    invoiceService.sendCancelledInvoices();
-    return "Message sent to the RabbitMQ Successfully";
-  }
-
   @PostMapping("/send-created-invoices")
   public String sendCreatedInvoices() {
 
     invoiceService.sendCreatedInvoices();
-    return "Message sent to the RabbitMQ Successfully";
-  }
-
-  @PostMapping("/send-paid-invoices")
-  public String sendPaidInvoices() {
-
-    invoiceService.sendPaidInvoices();
     return "Message sent to the RabbitMQ Successfully";
   }
 }

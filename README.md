@@ -1,4 +1,8 @@
-# RabbitMQ - Retry and Error Handling
+# RabbitMQ - Reliable Publish
 
-A dead-letter queue (DLQ), sometimes which is also known as an undelivered-message queue, is a holding queue for messages that cannot be delivered to their destinations due to some reason or other.
-![](img/0.png)
+- Did my message published?  
+- Something wrong?
+  * Invalid exchange
+  * Correct exchange, invalid routing key
+- Know via publisher confirms
+- Asynchronous callback from rabbitmq server to publisher

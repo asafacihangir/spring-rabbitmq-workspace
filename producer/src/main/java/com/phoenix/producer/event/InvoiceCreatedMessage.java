@@ -1,9 +1,5 @@
 package com.phoenix.producer.event;
 
-import java.time.LocalDate;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 public class InvoiceCreatedMessage {
 
 	private double amount;

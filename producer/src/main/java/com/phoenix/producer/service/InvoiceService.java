@@ -1,21 +1,20 @@
 package com.phoenix.producer.service;
 
 import com.github.javafaker.Faker;
-import com.phoenix.producer.event.InvoiceCancelledMessage;
 import com.phoenix.producer.event.InvoiceCreatedMessage;
-import com.phoenix.producer.event.InvoicePaidMessage;
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Service
 public class InvoiceService {
 
-  private final AmqpTemplate amqpTemplate;
+  private final RabbitTemplate rabbitTemplate;
 
   private final Faker faker;
 
@@ -25,9 +24,41 @@ public class InvoiceService {
   private static final Logger LOG = LoggerFactory.getLogger(InvoiceService.class);
 
   public InvoiceService(
-      @Qualifier("projectRabbitTemplate") AmqpTemplate amqpTemplate, Faker faker) {
-    this.amqpTemplate = amqpTemplate;
+      @Qualifier("projectRabbitTemplate") RabbitTemplate amqpTemplate, Faker faker) {
+    this.rabbitTemplate = amqpTemplate;
     this.faker = faker;
+  }
+
+  @PostConstruct
+  private void registerCallback() {
+    rabbitTemplate.setConfirmCallback(
+        (correlation, ack, reason) -> {
+          if (correlation == null) {
+            return;
+          }
+
+          if (ack) {
+            LOG.info("Message with correlation {} published", correlation.getId());
+          } else {
+            LOG.warn("Invalid exchange for message with correlation {}", correlation.getId());
+          }
+        });
+
+    rabbitTemplate.setReturnsCallback(
+        returned -> {
+          LOG.info("return callback");
+
+          if (returned.getReplyText() != null
+              && returned.getReplyText().equalsIgnoreCase("NO_ROUTE")) {
+            var id =
+                returned
+                    .getMessage()
+                    .getMessageProperties()
+                    .getHeader("spring_returned_message_correlation")
+                    .toString();
+            LOG.warn("Invalid routing key for message {}", id);
+          }
+        });
   }
 
   public void sendCreatedInvoices() {
@@ -41,50 +72,25 @@ public class InvoiceService {
       invoiceCreatedMessage.setCurrency(faker.currency().code());
 
       sendInvoiceCreated(invoiceCreatedMessage);
+      sendDummyToInvalidExchange(invoiceCreatedMessage);
+      sendDummyWithInvalidRoutingKey(invoiceCreatedMessage);
 
       LOG.info("Invoice Created {}", invoiceCreatedMessage);
     }
   }
 
-  public void sendCancelledInvoices() {
-    final long size = ThreadLocalRandom.current().nextInt(1, 100);
-    for (int i = 0; i < size; i++) {
-      final InvoiceCancelledMessage invoiceCancelledMessage = new InvoiceCancelledMessage();
-      invoiceCancelledMessage.setInvoiceNumber(
-          "INV_" + ThreadLocalRandom.current().nextInt(0, 100000));
-      invoiceCancelledMessage.setCancelDate(faker.date().toString());
-      invoiceCancelledMessage.setReason(faker.lorem().characters(1, 100));
-
-      sendInvoiceCancelled(invoiceCancelledMessage);
-
-      LOG.info("Invoice Cancelled {}", invoiceCancelledMessage);
-    }
-  }
-
-  public void sendPaidInvoices() {
-
-    final long size = ThreadLocalRandom.current().nextInt(1, 100);
-    for (int i = 0; i < size; i++) {
-      final InvoicePaidMessage paidMessage = new InvoicePaidMessage();
-      paidMessage.setInvoiceNumber("INV_" + ThreadLocalRandom.current().nextInt(0, 100000));
-      paidMessage.setPaidDate(faker.date().toString());
-      paidMessage.setPaymentNumber(UUID.randomUUID().toString());
-
-      sendInvoicePaid(paidMessage);
-
-      LOG.info("Invoice Paid {}", paidMessage);
-    }
-  }
-
   private void sendInvoiceCreated(InvoiceCreatedMessage message) {
-    amqpTemplate.convertAndSend(EXCHANGE, ROUTING_KEY, message);
+    var correlationData = new CorrelationData(message.getInvoiceNumber());
+    rabbitTemplate.convertAndSend(EXCHANGE, ROUTING_KEY, message, correlationData);
   }
 
-  private void sendInvoicePaid(InvoicePaidMessage message) {
-    amqpTemplate.convertAndSend(EXCHANGE, ROUTING_KEY, message);
+  private void sendDummyWithInvalidRoutingKey(InvoiceCreatedMessage message) {
+    var correlationData = new CorrelationData(message.getInvoiceNumber());
+    rabbitTemplate.convertAndSend("x.dummy2", "invalid-routing-key", message, correlationData);
   }
 
-  private void sendInvoiceCancelled(InvoiceCancelledMessage message) {
-    amqpTemplate.convertAndSend(EXCHANGE, ROUTING_KEY, message);
+  private void sendDummyToInvalidExchange(InvoiceCreatedMessage message) {
+    var correlationData = new CorrelationData(message.getInvoiceNumber());
+    rabbitTemplate.convertAndSend("x.non-exists-exchange", "", message, correlationData);
   }
 }
